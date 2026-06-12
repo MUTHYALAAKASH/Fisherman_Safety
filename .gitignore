@@ -1,0 +1,33 @@
+# IDEs, Editors, and OS Files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+Thumbs.db
+*.log
+
+# Backend Spring Boot build output
+backend/target/
+backend/bin/
+backend/*.log
+backend/out/
+
+# Frontend (handled by frontend/.gitignore, but added here for root safety)
+frontend/node_modules/
+frontend/appium_tests/node_modules/
+frontend/appium_tests_python/__pycache__/
+frontend/appium_tests_python/.pytest_cache/
+frontend/appium_tests_python/*.xlsx
+frontend/appium_tests_python/debug_page_source.xml
+frontend/appium_tests_python/*.png
+frontend/build/
+frontend/build_old/
+**/build/
+**/build_old/
+frontend/.dart_tool/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.pub/
+frontend/.pub-cache/
