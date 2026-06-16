@@ -1,0 +1,251 @@
+/* Design system and custom resets */
+:root {
+  --deep-navy: #030C1B;
+  --ocean-navy: #0A192F;
+  --card-navy: #112240;
+  --ocean-blue: #0077B6;
+  --sky-blue: #00B4D8;
+  --aquamarine: #00F5D4;
+  --crimson-alert: #D90429;
+  --warnings: #FFB703;
+  --safety-green: #2EC4B6;
+  --text-white: #F8F9FA;
+  --text-muted: #8892B0;
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--deep-navy);
+  color: var(--text-white);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+/* Fullscreen Responsive Layout */
+.app-container {
+  width: 100%;
+  height: 100%;
+  background: var(--deep-navy);
+  position: relative;
+  display: flex;
+  flex-direction: row; /* Desktop horizontal sidebar layout */
+  overflow: hidden;
+}
+
+/* Sidebar Navigation */
+.sidebar {
+  width: 280px;
+  background-color: var(--card-navy);
+  border-right: 1.5px solid rgba(0, 119, 182, 0.2);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px 16px;
+  flex-shrink: 0;
+  z-index: 1000;
+  transition: transform 0.3s ease;
+}
+
+.main-content {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background-color: rgba(3, 12, 27, 0.2);
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column; /* Collapses to vertical layout on mobile */
+  }
+
+  .sidebar {
+    position: absolute;
+    left: 0;
+    top: 60px;
+    height: calc(100% - 60px);
+    transform: translateX(-100%); /* Drawer overlay */
+    width: 260px;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--deep-navy);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--card-navy);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ocean-blue);
+}
+
+/* Glassmorphism Card Utility */
+.glass-card {
+  background: rgba(17, 34, 64, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(0, 119, 182, 0.25);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.gradient-alert-bg {
+  background: linear-gradient(135deg, var(--crimson-alert), #EF233C);
+}
+
+.gradient-safe-bg {
+  background: linear-gradient(135deg, var(--ocean-blue), var(--aquamarine));
+}
+
+/* Flashing Boundary Alert Border */
+.border-alert-flash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 8px solid var(--crimson-alert);
+  pointer-events: none;
+  z-index: 2000; /* above all overlays */
+  animation: warning-flash 0.8s infinite alternate;
+}
+
+@keyframes warning-flash {
+  0% {
+    border-color: rgba(217, 4, 41, 0.15);
+  }
+  100% {
+    border-color: rgba(217, 4, 41, 0.85);
+  }
+}
+
+/* Pulse SOS Animation */
+@keyframes sos-pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.sos-ripple {
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: rgba(217, 4, 41, 0.15);
+  animation: sos-pulse 2s infinite ease-out;
+  pointer-events: none;
+}
+
+.sos-ripple-safe {
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: rgba(46, 196, 182, 0.15);
+  animation: sos-pulse 2s infinite ease-out;
+  pointer-events: none;
+}
+
+/* Map specific styling */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.leaflet-control-container .leaflet-control-zoom {
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+  margin-top: 140px !important;
+}
+
+.leaflet-bar a {
+  background-color: var(--card-navy) !important;
+  color: var(--text-white) !important;
+  border-bottom: 1px solid var(--ocean-navy) !important;
+}
+
+.leaflet-bar a:hover {
+  background-color: var(--ocean-blue) !important;
+}
+
+/* Breathing indicator light */
+.boat-aura {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: rgba(0, 245, 212, 0.35);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: aura-glow 2s infinite ease-in-out;
+}
+
+@keyframes aura-glow {
+  0%, 100% {
+    transform: scale(0.9);
+    box-shadow: 0 0 10px rgba(0, 245, 212, 0.2);
+  }
+  50% {
+    transform: scale(1.25);
+    box-shadow: 0 0 20px rgba(0, 245, 212, 0.5);
+  }
+}
+
+.boat-core {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--ocean-blue);
+  color: var(--warnings);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.boat-core svg {
+  transform: rotate(-45deg);
+}
+
+/* CSS Animation for loaders */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
