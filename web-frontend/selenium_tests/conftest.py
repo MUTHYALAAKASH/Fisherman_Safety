@@ -108,6 +108,7 @@ def driver():
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
     else:
+        pass
         # Start the browser headed as standard. Run headless by uncommenting the line below if desired:
         # options.add_argument("--headless=new")
     
