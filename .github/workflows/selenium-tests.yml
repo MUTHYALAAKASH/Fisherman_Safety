@@ -101,9 +101,9 @@ jobs:
       with:
         name: QA-Test-Case-Suites
         path: |
-          Appium_Test_Cases_300.xlsx
-          Selenium_Test_Cases_300.xlsx
-          Load_Test_Cases_200.xlsx
+          Appium_Test_Cases_400.xlsx
+          Selenium_Test_Cases_400.xlsx
+          Load_Test_Cases_300.xlsx
           Vulnerability_Test_Cases_100.xlsx
 
     # 6. Deploy to GitHub Pages (Only on main push, if tests pass)

@@ -1815,8 +1815,11 @@ def main():
     appium_database = {}
     for idx, (cat_name, templates) in enumerate(appium_templates.items()):
         category_cases = []
-        for loop in range(5):
+        limit = 67 if idx < 4 else 66 # 67 * 4 + 66 * 2 = 400
+        for loop in range(7):
             for t_idx, t in enumerate(templates):
+                if len(category_cases) >= limit:
+                    break
                 # Interpolate parameters
                 lang = languages[(loop + t_idx) % len(languages)]
                 device = devices[(loop * t_idx) % len(devices)]
@@ -1846,17 +1849,22 @@ def main():
                     "priority": t["priority"],
                     "status": status
                 })
+            if len(category_cases) >= limit:
+                break
         appium_database[cat_name] = category_cases
         
-    generate_workbook("Appium_Test_Cases_300.xlsx", "Appium Mobile", "Smart Fisherman Safety Mobile App", appium_database, 300)
+    generate_workbook("Appium_Test_Cases_400.xlsx", "Appium Mobile", "Smart Fisherman Safety Mobile App", appium_database, 400)
 
     # 2. Generate Selenium Test Cases (300 cases)
     # 6 categories, 50 cases each, using 10 templates looped 5 times.
     selenium_database = {}
     for idx, (cat_name, templates) in enumerate(selenium_templates.items()):
         category_cases = []
-        for loop in range(5):
+        limit = 67 if idx < 4 else 66 # 67 * 4 + 66 * 2 = 400
+        for loop in range(7):
             for t_idx, t in enumerate(templates):
+                if len(category_cases) >= limit:
+                    break
                 # Interpolate parameters
                 browser = browsers[(loop + t_idx) % len(browsers)]
                 admin_role = admin_roles[(loop * t_idx) % len(admin_roles)]
@@ -1885,17 +1893,22 @@ def main():
                     "priority": "High" if t_idx < 4 else ("Medium" if t_idx < 8 else "Low"),
                     "status": status
                 })
+            if len(category_cases) >= limit:
+                break
         selenium_database[cat_name] = category_cases
         
-    generate_workbook("Selenium_Test_Cases_300.xlsx", "Selenium Web", "Smart Fisherman Safety Web Portal", selenium_database, 300)
+    generate_workbook("Selenium_Test_Cases_400.xlsx", "Selenium Web", "Smart Fisherman Safety Web Portal", selenium_database, 400)
 
     # 3. Generate Load Test Cases (200 cases)
     # 4 categories, 50 cases each, using 10 templates looped 5 times.
     load_database = {}
     for idx, (cat_name, templates) in enumerate(load_templates.items()):
         category_cases = []
-        for loop in range(5):
+        limit = 75 # 75 * 4 = 300
+        for loop in range(8):
             for t_idx, t in enumerate(templates):
+                if len(category_cases) >= limit:
+                    break
                 # Interpolate parameters
                 users = [100, 500, 1000, 2000][(loop + t_idx) % 4]
                 connections = [500, 1000, 5000, 10000][(loop * t_idx) % 4]
@@ -1922,9 +1935,11 @@ def main():
                     "priority": "High" if t_idx < 5 else "Medium",
                     "status": status
                 })
+            if len(category_cases) >= limit:
+                break
         load_database[cat_name] = category_cases
         
-    generate_workbook("Load_Test_Cases_200.xlsx", "Backend Load & Performance", "Smart Fisherman Safety API/Backend", load_database, 200)
+    generate_workbook("Load_Test_Cases_300.xlsx", "Backend Load & Performance", "Smart Fisherman Safety API/Backend", load_database, 300)
 
     # 4. Generate Vulnerability Test Cases (100 cases)
     # 5 categories, 20 cases each, using 10 templates looped 2 times.
