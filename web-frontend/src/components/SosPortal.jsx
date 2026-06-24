@@ -72,13 +72,18 @@ export default function SosPortal({ currentPosition, currentLanguage }) {
   const triggerEmergency = async () => {
     setIsHolding(false);
     setIsTriggered(true);
-    voiceAssistant.speak("Emergency S.O.S activated. Sending distress alerts with GPS coordinates to contacts and Coast Guard.");
 
     const contacts = await syncManager.queueSos(
       currentPosition.latitude,
       currentPosition.longitude
     );
     setNotifiedContacts(contacts);
+
+    const names = contacts.map(c => c.contactName).filter(n => n).join(" and ");
+    const voiceMsg = names 
+      ? `Emergency S.O.S activated. Sending distress alerts with GPS coordinates to ${names} and Coast Guard.`
+      : "Emergency S.O.S activated. Sending distress alerts with GPS coordinates to contacts and Coast Guard.";
+    voiceAssistant.speak(voiceMsg);
   };
 
   const resetAlarm = () => {

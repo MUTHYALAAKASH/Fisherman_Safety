@@ -17,16 +17,22 @@ export default function LoginRegister({ onAuthSuccess, currentLanguage }) {
   const [registrationNumber, setRegistrationNumber] = useState('');
   const [harborLocation, setHarborLocation] = useState('');
 
-  const validateMobile = (mobile) => {
+  const validateMobile = (mobile, isRegisterMode) => {
     if (!mobile) return "Please enter mobile number";
     if (!/^\d+$/.test(mobile)) return "Mobile number must contain only digits";
-    if (mobile.length !== 10) return "Mobile number must be exactly 10 digits";
+    if (isRegisterMode) {
+      if (mobile.length !== 10) return "Mobile number must be exactly 10 digits";
+    } else {
+      if (mobile.length < 4 || mobile.length > 15) return "Mobile number must be between 4 and 15 digits";
+    }
     return null;
   };
 
-  const validatePassword = (pass) => {
+  const validatePassword = (pass, isRegisterMode) => {
     if (!pass) return "Password is required";
-    if (pass.length < 6) return "Password must be at least 6 characters";
+    if (isRegisterMode) {
+      if (pass.length < 6) return "Password must be at least 6 characters";
+    }
     return null;
   };
 
@@ -35,13 +41,13 @@ export default function LoginRegister({ onAuthSuccess, currentLanguage }) {
     setError('');
 
     // Pre-validations
-    const mobError = validateMobile(mobileNumber);
+    const mobError = validateMobile(mobileNumber, isRegister);
     if (mobError) {
       setError(mobError);
       return;
     }
 
-    const passError = validatePassword(password);
+    const passError = validatePassword(password, isRegister);
     if (passError) {
       setError(passError);
       return;

@@ -46,17 +46,31 @@ public class UserController {
     }
 
     @PostMapping("/contacts")
-    @Operation(summary = "Add emergency contact by user ID", description = "Adds a registered user as an emergency contact.")
+    @Operation(summary = "Add emergency contact", description = "Adds a registered user or a custom family contact as an emergency contact.")
     public ResponseEntity<?> addContact(@RequestBody Map<String, Object> payload) {
-        Long contactUserId = Long.valueOf(payload.get("contactUserId").toString());
         String relationship = (String) payload.get("relationship");
-        EmergencyContact saved = userService.addEmergencyContact(getAuthenticatedMobile(), contactUserId, relationship);
+        EmergencyContact saved;
+
+        if (payload.containsKey("contactUserId") && payload.get("contactUserId") != null) {
+            Long contactUserId = Long.valueOf(payload.get("contactUserId").toString());
+            saved = userService.addEmergencyContact(getAuthenticatedMobile(), contactUserId, relationship);
+        } else {
+            String contactName = (String) payload.get("contactName");
+            String contactMobile = (String) payload.get("contactMobile");
+            saved = userService.addCustomEmergencyContact(getAuthenticatedMobile(), contactName, contactMobile, relationship);
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("id", saved.getId());
-        response.put("contactUserId", saved.getContactUser().getId());
-        response.put("contactName", saved.getContactUser().getFullName());
-        response.put("contactMobile", saved.getContactUser().getMobileNumber());
+        if (saved.getContactUser() != null) {
+            response.put("contactUserId", saved.getContactUser().getId());
+            response.put("contactName", saved.getContactUser().getFullName());
+            response.put("contactMobile", saved.getContactUser().getMobileNumber());
+        } else {
+            response.put("contactUserId", null);
+            response.put("contactName", saved.getContactName());
+            response.put("contactMobile", saved.getContactMobile());
+        }
         response.put("relationship", saved.getRelationship());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -68,12 +82,27 @@ public class UserController {
         List<Map<String, Object>> response = contacts.stream().map(c -> {
             Map<String, Object> map = new HashMap<>();
             map.put("id", c.getId());
-            map.put("contactUserId", c.getContactUser().getId());
-            map.put("contactName", c.getContactUser().getFullName());
-            map.put("contactMobile", c.getContactUser().getMobileNumber());
+            if (c.getContactUser() != null) {
+                map.put("contactUserId", c.getContactUser().getId());
+                map.put("contactName", c.getContactUser().getFullName());
+                map.put("contactMobile", c.getContactUser().getMobileNumber());
+            } else {
+                map.put("contactUserId", null);
+                map.put("contactName", c.getContactName());
+                map.put("contactMobile", c.getContactMobile());
+            }
             map.put("relationship", c.getRelationship());
             return map;
         }).collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/contacts/{id}")
+    @Operation(summary = "Delete emergency contact", description = "Deletes a saved emergency contact by ID.")
+    public ResponseEntity<?> deleteContact(@PathVariable Long id) {
+        userService.deleteEmergencyContact(getAuthenticatedMobile(), id);
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Emergency contact deleted successfully");
         return ResponseEntity.ok(response);
     }
 

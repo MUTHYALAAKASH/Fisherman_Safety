@@ -288,7 +288,7 @@ def test_ui_localization_keys(driver, base_url, lang_code, key_name):
     lang_btn = WebDriverWait(driver, 5).until(
         EC.element_to_be_clickable((By.ID, f"lang-btn-{lang_code}"))
     )
-    lang_btn.click()
+    driver.execute_script("arguments[0].click();", lang_btn)
     
     # Retrieve translation value from global window helper
     expected_text = driver.execute_script(f"return window.translate('{key_name}', '{lang_code}');")

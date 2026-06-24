@@ -81,23 +81,32 @@ class _SosScreenState extends ConsumerState<SosScreen> with SingleTickerProvider
     });
 
     HapticFeedback.vibrate();
-    ref.read(voiceAssistantProvider.notifier).speak("Emergency S.O.S activated. Sending distress alerts to contacts and Coast Guard.");
 
     final location = ref.read(locationProvider).currentPosition;
 
     // Send to sync engine (will post immediately if online, else queue in Hive)
-    await ref.read(syncProvider.notifier).queueSos(
+    final contacts = await ref.read(syncProvider.notifier).queueSos(
           location.latitude,
           location.longitude,
         );
 
+    final names = contacts.map((c) => c['contactName'] ?? '').where((name) => name.toString().isNotEmpty).join(" and ");
+    final voiceMsg = names.isNotEmpty
+        ? "Emergency S.O.S activated. Sending distress alerts to $names and Coast Guard."
+        : "Emergency S.O.S activated. Sending distress alerts to contacts and Coast Guard.";
+    ref.read(voiceAssistantProvider.notifier).speak(voiceMsg);
+
     // Simulate direct offline local SMS dispatch
-    _simulateSmsDispatch(location.latitude, location.longitude);
+    _simulateSmsDispatch(location.latitude, location.longitude, contacts);
   }
 
-  void _simulateSmsDispatch(double lat, double lon) {
+  void _simulateSmsDispatch(double lat, double lon, List<dynamic> contacts) {
     debugPrint("🚨 [OFFLINE SMS GATEWAY] Dispatching emergency SOS coordinates to local SMS service...");
-    debugPrint("SMS Payload: 'EMERGENCY SOS: Boat is in danger! Position: Lat $lat, Lon $lon. Please dispatch Search and Rescue immediately.'");
+    for (var contact in contacts) {
+      final name = contact['contactName'] ?? 'Family';
+      final mobile = contact['contactMobile'] ?? '';
+      debugPrint("SMS Payload to $name ($mobile): 'EMERGENCY SOS: Boat is in danger! Position: Lat $lat, Lon $lon. Please dispatch Search and Rescue immediately.'");
+    }
   }
 
   @override

@@ -5,13 +5,7 @@ import 'package:flutter/foundation.dart';
 class ApiClient {
   final Dio _dio = Dio();
   static String get baseUrl {
-    if (kIsWeb ||
-        defaultTargetPlatform == TargetPlatform.windows ||
-        defaultTargetPlatform == TargetPlatform.macOS ||
-        defaultTargetPlatform == TargetPlatform.linux) {
-      return 'http://localhost:8080';
-    }
-    return 'http://127.0.0.1:8080'; // Local backend mapping via adb reverse
+    return 'http://localhost:8080';
   }
 
   ApiClient() {

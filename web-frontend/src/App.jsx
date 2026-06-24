@@ -60,6 +60,28 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+  // Query actual browser location on startup to customize coordinates & weather
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          setCurrentPosition({ latitude: lat, longitude: lon });
+          setBreadcrumbs([
+            { latitude: lat - 0.002, longitude: lon - 0.002 },
+            { latitude: lat - 0.001, longitude: lon - 0.001 },
+            { latitude: lat, longitude: lon }
+          ]);
+        },
+        (error) => {
+          console.warn("Browser Geolocation access error or denied, using defaults: ", error);
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    }
+  }, []);
+
   const handleAuthSuccess = (profile) => {
     setUserProfile(profile);
     setCurrentView('dashboard');

@@ -20,33 +20,37 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _searchController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _mobileController = TextEditingController();
   final _relationshipController = TextEditingController();
-  SearchedUser? _selectedUser;
-  String _searchQuery = '';
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _nameController.dispose();
+    _mobileController.dispose();
     _relationshipController.dispose();
     super.dispose();
   }
 
   void _addContact() async {
-    if (_selectedUser == null) {
+    final name = _nameController.text.trim();
+    final mobile = _mobileController.text.trim();
+    final rel = _relationshipController.text.trim();
+
+    if (name.isEmpty || mobile.isEmpty || rel.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please search and select a registered user account first.'),
+          content: Text('Please fill in all family contact details.'),
           backgroundColor: AppColors.crimsonAlert,
         ),
       );
       return;
     }
 
-    if (_relationshipController.text.trim().isEmpty) {
+    if (mobile.length != 10 || int.tryParse(mobile) == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please enter relationship details.'),
+          content: Text('Mobile number must be exactly 10 digits.'),
           backgroundColor: AppColors.crimsonAlert,
         ),
       );
@@ -54,17 +58,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
 
     final success = await ref.read(contactsProvider.notifier).addContact(
-      contactUserId: _selectedUser!.id,
-      contactName: _selectedUser!.fullName,
-      contactMobile: _selectedUser!.mobileNumber,
-      relationship: _relationshipController.text.trim(),
+      contactName: name,
+      contactMobile: mobile,
+      relationship: rel,
     );
 
     if (success) {
       setState(() {
-        _selectedUser = null;
-        _searchController.clear();
-        _searchQuery = '';
+        _nameController.clear();
+        _mobileController.clear();
         _relationshipController.clear();
       });
 
@@ -81,6 +83,47 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           backgroundColor: AppColors.crimsonAlert,
         ),
       );
+    }
+  }
+
+  void _deleteContact(int id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.cardNavy,
+        title: const Text("Delete Contact", style: TextStyle(color: Colors.white)),
+        content: const Text("Are you sure you want to remove this family contact?", style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("CANCEL", style: TextStyle(color: AppColors.textMuted)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.crimsonAlert),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("DELETE", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final success = await ref.read(contactsProvider.notifier).deleteContact(id);
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Emergency contact removed successfully.'),
+            backgroundColor: AppColors.safetyGreen,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to remove contact.'),
+            backgroundColor: AppColors.crimsonAlert,
+          ),
+        );
+      }
     }
   }
 
@@ -438,7 +481,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     "${ctc.relationship ?? 'Contact'} | ${ctc.contactMobile}",
                                     style: const TextStyle(color: AppColors.textMuted),
                                   ),
-                                  trailing: const Icon(Icons.contact_phone_outlined, color: AppColors.skyBlue),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: AppColors.crimsonAlert),
+                                    onPressed: () {
+                                      if (ctc.id != null) {
+                                        _deleteContact(ctc.id!);
+                                      } else {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Cannot delete offline mock contact.'),
+                                            backgroundColor: AppColors.crimsonAlert,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                  ),
                                 );
                               },
                             );
@@ -447,122 +504,60 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         
                         const Divider(color: AppColors.oceanNavy, height: 24),
                         
-                        // Search User bar
-                        if (_selectedUser == null) ...[
-                          CustomTextField(
-                            labelText: 'Search Registered Accounts',
-                            hintText: 'Search by name or mobile...',
-                            controller: _searchController,
-                            onChanged: (value) {
-                              setState(() {
-                                _searchQuery = value;
-                              });
-                            },
+                        // Manual Family Contact Entry fields
+                        const Text(
+                          "REGISTER FAMILY CONTACT",
+                          style: TextStyle(
+                            color: AppColors.textMuted,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            letterSpacing: 0.5,
                           ),
-                          const SizedBox(height: 8),
-                          if (_searchQuery.trim().isNotEmpty)
-                            ref.watch(userSearchProvider(_searchQuery)).when(
-                                  loading: () => const Center(
-                                    child: CircularProgressIndicator(color: AppColors.aquamarine),
-                                  ),
-                                  error: (err, stack) => const Text(
-                                    "Error searching accounts",
-                                    style: TextStyle(color: AppColors.crimsonAlert, fontSize: 12),
-                                  ),
-                                  data: (users) {
-                                    if (users.isEmpty) {
-                                      return const Padding(
-                                        padding: EdgeInsets.symmetric(vertical: 8.0),
-                                        child: Text(
-                                          "No registered users found matching query.",
-                                          style: TextStyle(color: AppColors.textMuted, fontSize: 13),
-                                        ),
-                                      );
-                                    }
-                                     return Container(
-                                       constraints: const BoxConstraints(maxHeight: 180),
-                                       decoration: BoxDecoration(
-                                         color: AppColors.oceanNavy,
-                                         borderRadius: BorderRadius.circular(12),
-                                         border: Border.all(color: AppColors.oceanBlue, width: 1),
-                                       ),
-                                      child: ListView.separated(
-                                        shrinkWrap: true,
-                                        itemCount: users.length,
-                                        separatorBuilder: (c, idx) => const Divider(color: AppColors.oceanBlue, height: 1),
-                                        itemBuilder: (context, index) {
-                                          final u = users[index];
-                                          return ListTile(
-                                            dense: true,
-                                            title: Text(u.fullName, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                            subtitle: Text("${u.role} • ${u.mobileNumber}", style: const TextStyle(color: AppColors.textMuted)),
-                                            onTap: () {
-                                              setState(() {
-                                                _selectedUser = u;
-                                              });
-                                            },
-                                          );
-                                        },
-                                      ),
-                                    );
-                                  },
-                                ),
-                        ] else ...[
-                          // Selected Contact Card
-                          Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: AppColors.skyBlue.withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.skyBlue, width: 1.5),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.check_circle_rounded, color: AppColors.safetyGreen, size: 24),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        _selectedUser!.fullName,
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                                      ),
-                                      Text(
-                                        "${_selectedUser!.role} • ${_selectedUser!.mobileNumber}",
-                                        style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.close, color: AppColors.crimsonAlert),
-                                  onPressed: () {
-                                    setState(() {
-                                      _selectedUser = null;
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          CustomTextField(
-                            labelText: 'Relationship (e.g. Wife, Son)',
-                            hintText: 'Enter relationship',
-                            controller: _relationshipController,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) return 'Enter relationship';
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          CustomButton(
-                            text: "Register Emergency Contact",
-                            color: AppColors.oceanBlue,
-                            onPressed: _addContact,
-                          ),
-                        ],
+                        ),
+                        const SizedBox(height: 12),
+                        CustomTextField(
+                          labelText: 'Full Name',
+                          hintText: 'e.g. Kavita Raja',
+                          controller: _nameController,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) return 'Enter full name';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        CustomTextField(
+                          labelText: 'Mobile Number',
+                          hintText: '10-digit number',
+                          controller: _mobileController,
+                          keyboardType: TextInputType.phone,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) return 'Enter mobile number';
+                            if (value.trim().length != 10 || int.tryParse(value.trim()) == null) {
+                              return 'Enter valid 10-digit number';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        CustomTextField(
+                          labelText: 'Relationship (e.g. Wife, Son, Brother)',
+                          hintText: 'Enter relationship',
+                          controller: _relationshipController,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) return 'Enter relationship';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        CustomButton(
+                          text: "Register Family Contact",
+                          color: AppColors.oceanBlue,
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              _addContact();
+                            }
+                          },
+                        ),
                       ],
                     ),
                   ),

@@ -84,10 +84,6 @@ public class UserService {
         User contactUser = userRepository.findById(contactUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Contact user not found with id: " + contactUserId));
 
-        if (user.getId().equals(contactUserId)) {
-            throw new IllegalArgumentException("Cannot add yourself as an emergency contact");
-        }
-
         EmergencyContact contact = EmergencyContact.builder()
                 .user(user)
                 .contactUser(contactUser)
@@ -99,6 +95,30 @@ public class UserService {
     public List<EmergencyContact> getEmergencyContacts(String mobileNumber) {
         User user = getUserByMobile(mobileNumber);
         return emergencyContactRepository.findByUserId(user.getId());
+    }
+
+    @Transactional
+    public EmergencyContact addCustomEmergencyContact(String mobileNumber, String contactName, String contactMobile, String relationship) {
+        User user = getUserByMobile(mobileNumber);
+
+        EmergencyContact contact = EmergencyContact.builder()
+                .user(user)
+                .contactName(contactName)
+                .contactMobile(contactMobile)
+                .relationship(relationship)
+                .build();
+        return emergencyContactRepository.save(contact);
+    }
+
+    @Transactional
+    public void deleteEmergencyContact(String mobileNumber, Long contactId) {
+        User user = getUserByMobile(mobileNumber);
+        EmergencyContact contact = emergencyContactRepository.findById(contactId)
+                .orElseThrow(() -> new ResourceNotFoundException("Contact not found with id: " + contactId));
+        if (!contact.getUser().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("Unauthorized to delete this contact");
+        }
+        emergencyContactRepository.delete(contact);
     }
 
     public List<User> searchUsers(String query) {

@@ -21,8 +21,16 @@ public class EmergencyContact {
     private User user; // The user who added the contact
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "contact_user_id", nullable = false)
-    private User contactUser; // The registered user who is the contact
+    @JoinColumn(name = "contact_user_id", nullable = true)
+    private User contactUser; // The registered user who is the contact (optional)
+
+    @Size(max = 100)
+    @Column(name = "contact_name")
+    private String contactName;
+
+    @Size(max = 15)
+    @Column(name = "contact_mobile")
+    private String contactMobile;
 
     @Size(max = 50)
     private String relationship;

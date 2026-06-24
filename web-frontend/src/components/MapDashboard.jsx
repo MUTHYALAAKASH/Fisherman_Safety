@@ -258,6 +258,29 @@ export default function MapDashboard({
     setVoiceActive(active);
   };
 
+  const handleLocateUser = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          setCurrentPosition({ latitude: lat, longitude: lon });
+          if (mapRef.current) {
+            mapRef.current.setView([lat, lon], mapRef.current.getZoom());
+          }
+          voiceAssistant.speak("Map centered to GPS coordinates.");
+        },
+        (error) => {
+          console.error("Locate GPS error: ", error);
+          alert("GPS Locate Failed: Geolocation permission denied or timeout.");
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    } else {
+      alert("GPS Locate Failed: Geolocation is not supported by this browser.");
+    }
+  };
+
   // Simulating vessel location incremental drift
   useEffect(() => {
     if (isSimulating) {
@@ -332,6 +355,16 @@ export default function MapDashboard({
         ) : (
           <MicOff size={24} color="var(--text-muted)" />
         )}
+      </button>
+
+      {/* 3.1 Locate Me GPS button */}
+      <button
+        id="locate-gps-btn"
+        onClick={handleLocateUser}
+        style={styles.gpsFab}
+        title="Reset Map to GPS Location"
+      >
+        <Navigation size={24} color="var(--aquamarine)" style={{ transform: 'rotate(45deg)' }} />
       </button>
 
       {/* 4. Top overlay panels (sync connection and active boundary alert banners) */}
@@ -488,6 +521,23 @@ const styles = {
     cursor: 'pointer',
     outline: 'none',
     zIndex: 500,
+  },
+  gpsFab: {
+    position: 'absolute',
+    top: '124px',
+    right: '16px',
+    width: '54px',
+    height: '54px',
+    borderRadius: '50%',
+    backgroundColor: 'var(--card-navy)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    cursor: 'pointer',
+    outline: 'none',
+    zIndex: 500,
+    border: '2px solid var(--aquamarine)',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
   },
   topOverlayContainer: {
     position: 'absolute',

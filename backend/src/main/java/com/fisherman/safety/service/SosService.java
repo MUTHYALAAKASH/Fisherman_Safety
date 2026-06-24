@@ -58,25 +58,34 @@ public class SosService {
         // Dispatch emergency messages and save distress chat history
         List<EmergencyContact> contacts = emergencyContactRepository.findByUserId(user.getId());
         logger.warn("🚨 [EMERGENCY SOS DISPATCH] Initiating chat & SMS dispatch simulation for user: {}", user.getFullName());
+        
+        // Simulating SeaGuard / Coast Guard alert dispatch
+        logger.warn("🚨 [SEA GUARD DISTRESS ALERT] Coordinates [{}, {}] successfully dispatched to the nearest SeaGuard / Coast Guard Station for search & rescue.",
+                alert.getLatitude(), alert.getLongitude());
+
         if (contacts.isEmpty()) {
             logger.warn("  --> No emergency contacts registered for this user.");
         } else {
             for (EmergencyContact contact : contacts) {
-                User contactUser = contact.getContactUser();
-                logger.warn("  --> Simulating SMS transmission to {} ({}) - Message: 'EMERGENCY SOS: {} is in danger at [{}, {}].'",
-                        contactUser.getFullName(), contactUser.getMobileNumber(), user.getFullName(), alert.getLatitude(), alert.getLongitude());
+                String contactName = contact.getContactUser() != null ? contact.getContactUser().getFullName() : contact.getContactName();
+                String contactMobile = contact.getContactUser() != null ? contact.getContactUser().getMobileNumber() : contact.getContactMobile();
 
-                // Auto-inject distress message into user's chat box
-                ChatMessage distressMsg = ChatMessage.builder()
-                        .sender(user)
-                        .recipient(contactUser)
-                        .message("🚨 EMERGENCY SOS! I am in danger. Coordinates: Lat " + alert.getLatitude() + ", Lon " + alert.getLongitude())
-                        .latitude(alert.getLatitude())
-                        .longitude(alert.getLongitude())
-                        .isSos(true)
-                        .build();
-                chatMessageRepository.save(distressMsg);
-                logger.warn("  --> Auto-sent distress chat message to {} (ID: {})", contactUser.getFullName(), contactUser.getId());
+                logger.warn("  --> Simulating SMS transmission to {} ({}) - Message: 'EMERGENCY SOS: {} is in danger at [{}, {}].'",
+                        contactName, contactMobile, user.getFullName(), alert.getLatitude(), alert.getLongitude());
+
+                if (contact.getContactUser() != null) {
+                    // Auto-inject distress message into user's chat box only if contact is a registered user
+                    ChatMessage distressMsg = ChatMessage.builder()
+                            .sender(user)
+                            .recipient(contact.getContactUser())
+                            .message("🚨 EMERGENCY SOS! I am in danger. Coordinates: Lat " + alert.getLatitude() + ", Lon " + alert.getLongitude())
+                            .latitude(alert.getLatitude())
+                            .longitude(alert.getLongitude())
+                            .isSos(true)
+                            .build();
+                    chatMessageRepository.save(distressMsg);
+                    logger.warn("  --> Auto-sent distress chat message to {} (ID: {})", contact.getContactUser().getFullName(), contact.getContactUser().getId());
+                }
             }
         }
 

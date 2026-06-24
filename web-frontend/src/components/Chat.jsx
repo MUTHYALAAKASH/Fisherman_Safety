@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../services/syncManager';
-import { Search, Send, MapPin, User, MessageSquare, ArrowLeft } from 'lucide-react';
+import { Search, Send, MapPin, User, MessageSquare, ArrowLeft, AlertTriangle } from 'lucide-react';
 import { translate } from '../services/localizations';
 
 export default function Chat({ currentPosition, userProfile, currentLanguage }) {
@@ -66,8 +66,7 @@ export default function Chat({ currentPosition, userProfile, currentLanguage }) 
     try {
       const response = await api.get('/api/users/search', { params: { query } });
       if (response.status === 200) {
-        const filtered = response.data.filter(u => u.id !== userProfile.id);
-        setSearchResults(filtered);
+        setSearchResults(response.data);
       }
     } catch (err) {
       console.error("Search failed: ", err);
@@ -179,14 +178,21 @@ export default function Chat({ currentPosition, userProfile, currentLanguage }) 
                     ...styles.listItem,
                     backgroundColor: selectedUser?.id === contact.contactUserId ? 'rgba(0, 245, 212, 0.08)' : 'rgba(17, 34, 64, 0.75)',
                     borderColor: selectedUser?.id === contact.contactUserId ? 'var(--aquamarine)' : 'rgba(0, 119, 182, 0.25)',
+                    opacity: contact.contactUserId ? 1 : 0.7,
                   }}
                   className="glass-card"
-                  onClick={() => setSelectedUser({ id: contact.contactUserId, fullName: contact.contactName })}
+                  onClick={() => {
+                    if (contact.contactUserId) {
+                      setSelectedUser({ id: contact.contactUserId, fullName: contact.contactName });
+                    } else {
+                      alert(`${contact.contactName} is registered as an offline/SMS family contact. Secure chat room is only available for registered users who have created an account on the platform.`);
+                    }
+                  }}
                 >
                   <User size={18} color="var(--aquamarine)" />
                   <div>
                     <span style={styles.listName}>{contact.contactName}</span>
-                    <span style={styles.listSub}>{contact.relationship} • {contact.contactMobile}</span>
+                    <span style={styles.listSub}>{contact.relationship} • {contact.contactMobile} {!contact.contactUserId && "(SMS-only)"}</span>
                   </div>
                 </div>
               ))}
@@ -224,6 +230,64 @@ export default function Chat({ currentPosition, userProfile, currentLanguage }) 
                 </div>
               ) : (
                 messages.map((msg) => {
+                  if (msg.isSos) {
+                    return (
+                      <div
+                        key={msg.id}
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          width: '100%',
+                          margin: '12px 0',
+                        }}
+                      >
+                        <div
+                          style={{
+                            maxWidth: '85%',
+                            padding: '16px',
+                            borderRadius: '16px',
+                            backgroundColor: 'rgba(217, 4, 41, 0.12)',
+                            border: '2px solid var(--crimson-alert)',
+                            boxShadow: '0 4px 12px rgba(217, 4, 41, 0.2)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--crimson-alert)', fontWeight: 'bold', fontSize: '14px' }}>
+                            <AlertTriangle size={18} />
+                            <span>🚨 ACTIVE SOS SIGNAL</span>
+                          </div>
+                          <p style={{ ...styles.bubbleText, fontWeight: 'bold', textAlign: 'center' }}>{msg.message}</p>
+                          {msg.latitude && msg.longitude && (
+                            <a
+                              href={`https://www.openstreetmap.org/?mlat=${msg.latitude}&mlon=${msg.longitude}#map=15/${msg.latitude}/${msg.longitude}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                ...styles.locationTag,
+                                color: 'var(--crimson-alert)',
+                                justifyContent: 'center',
+                                border: '1px solid var(--crimson-alert)',
+                                borderRadius: '8px',
+                                padding: '8px 12px',
+                                textDecoration: 'none',
+                                marginTop: '4px',
+                                backgroundColor: 'rgba(217, 4, 41, 0.08)'
+                              }}
+                            >
+                              <MapPin size={14} />
+                              <span>Locate Distress Signal ({msg.latitude.toFixed(4)}, {msg.longitude.toFixed(4)})</span>
+                            </a>
+                          )}
+                          <span style={{ ...styles.bubbleTime, color: 'rgba(248, 249, 250, 0.4)' }}>
+                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  }
+
                   const isMe = msg.senderId === userProfile.id;
                   return (
                     <div

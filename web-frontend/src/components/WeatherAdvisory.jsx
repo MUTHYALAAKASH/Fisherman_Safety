@@ -70,7 +70,7 @@ export default function WeatherAdvisory({ latitude = 9.117, longitude = 79.782, 
       }
 
       setWeatherData({
-        windSpeedKnots: parseFloat(windSpeedKnots.toFixed(1)),
+        windSpeedKnots: parseFloat(windSpeedKts.toFixed(1)),
         waveHeightMeters: parseFloat(waveHeight.toFixed(1)),
         temperatureCelsius: parseFloat(temp.toFixed(1)),
         pressureHpa: parseFloat(pressure.toFixed(0)),

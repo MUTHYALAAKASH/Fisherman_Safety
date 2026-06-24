@@ -1809,13 +1809,12 @@ def generate_workbook(filename, title, metadata_proj, test_cases_by_cat, total_t
 def main():
     print("Beginning generation of Test Case spreadsheets...")
     
-    # 1. Generate Appium Test Cases (300 cases)
-    # We have 6 categories. To get exactly 300 cases, we generate 50 cases per category.
-    # We have 10 template scenarios per category. We expand them 5 times by mapping random factors.
+    # 1. Generate Appium Test Cases (350 cases)
+    # We have 6 categories. To get exactly 350 cases, we generate 59 cases for the first 2, and 58 cases for the remaining 4.
     appium_database = {}
     for idx, (cat_name, templates) in enumerate(appium_templates.items()):
         category_cases = []
-        limit = 67 if idx < 4 else 66 # 67 * 4 + 66 * 2 = 400
+        limit = 59 if idx < 2 else 58
         for loop in range(7):
             for t_idx, t in enumerate(templates):
                 if len(category_cases) >= limit:
@@ -1853,14 +1852,14 @@ def main():
                 break
         appium_database[cat_name] = category_cases
         
-    generate_workbook("Appium_Test_Cases_400.xlsx", "Appium Mobile", "Smart Fisherman Safety Mobile App", appium_database, 400)
+    generate_workbook("Appium_Test_Cases_350.xlsx", "Appium Mobile", "Smart Fisherman Safety Mobile App", appium_database, 350)
 
-    # 2. Generate Selenium Test Cases (300 cases)
-    # 6 categories, 50 cases each, using 10 templates looped 5 times.
+    # 2. Generate Selenium Test Cases (350 cases)
+    # 6 categories, 59 cases for the first 2, and 58 cases for the remaining 4.
     selenium_database = {}
     for idx, (cat_name, templates) in enumerate(selenium_templates.items()):
         category_cases = []
-        limit = 67 if idx < 4 else 66 # 67 * 4 + 66 * 2 = 400
+        limit = 59 if idx < 2 else 58
         for loop in range(7):
             for t_idx, t in enumerate(templates):
                 if len(category_cases) >= limit:
@@ -1897,15 +1896,15 @@ def main():
                 break
         selenium_database[cat_name] = category_cases
         
-    generate_workbook("Selenium_Test_Cases_400.xlsx", "Selenium Web", "Smart Fisherman Safety Web Portal", selenium_database, 400)
+    generate_workbook("Selenium_Test_Cases_350.xlsx", "Selenium Web", "Smart Fisherman Safety Web Portal", selenium_database, 350)
 
-    # 3. Generate Load Test Cases (200 cases)
-    # 4 categories, 50 cases each, using 10 templates looped 5 times.
+    # 3. Generate Load Test Cases (350 cases)
+    # 4 categories, 88 cases for first 2, 87 cases for remaining 2.
     load_database = {}
     for idx, (cat_name, templates) in enumerate(load_templates.items()):
         category_cases = []
-        limit = 75 # 75 * 4 = 300
-        for loop in range(8):
+        limit = 88 if idx < 2 else 87
+        for loop in range(10):
             for t_idx, t in enumerate(templates):
                 if len(category_cases) >= limit:
                     break
@@ -1939,15 +1938,18 @@ def main():
                 break
         load_database[cat_name] = category_cases
         
-    generate_workbook("Load_Test_Cases_300.xlsx", "Backend Load & Performance", "Smart Fisherman Safety API/Backend", load_database, 300)
+    generate_workbook("Load_Test_Cases_350.xlsx", "Backend Load & Performance", "Smart Fisherman Safety API/Backend", load_database, 350)
 
-    # 4. Generate Vulnerability Test Cases (100 cases)
-    # 5 categories, 20 cases each, using 10 templates looped 2 times.
+    # 4. Generate Vulnerability Test Cases (350 cases)
+    # 5 categories, 70 cases each.
     vuln_database = {}
     for idx, (cat_name, templates) in enumerate(vuln_templates.items()):
         category_cases = []
-        for loop in range(2):
+        limit = 70
+        for loop in range(8):
             for t_idx, t in enumerate(templates):
+                if len(category_cases) >= limit:
+                    break
                 # Interpolate parameters
                 boat_id = boats[(loop + t_idx) % len(boats)]
                 region = regions[(loop * t_idx) % len(regions)]
@@ -1971,9 +1973,11 @@ def main():
                     "priority": "High" if t_idx < 6 else "Medium",
                     "status": status
                 })
+            if len(category_cases) >= limit:
+                break
         vuln_database[cat_name] = category_cases
         
-    generate_workbook("Vulnerability_Test_Cases_100.xlsx", "Security & Vulnerability", "Smart Fisherman Safety Ecosystem Security", vuln_database, 100)
+    generate_workbook("Vulnerability_Test_Cases_350.xlsx", "Security & Vulnerability", "Smart Fisherman Safety Ecosystem Security", vuln_database, 350)
 
     print("\nAll Excel test case sheets generated successfully in the project root directory!")
 

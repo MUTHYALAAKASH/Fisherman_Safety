@@ -105,10 +105,37 @@ class SyncManager extends StateNotifier<SyncState> {
       });
       _updateCounts();
       debugPrint("Offline: Critical SOS queued locally in sos_box.");
-      final offlineContacts = [
-        {'contactName': 'Arul Kumar', 'contactMobile': '9876543210', 'relationship': 'Brother', 'deliveryStatus': 'SMS_QUEUED_OFFLINE'},
-        {'contactName': 'Kavita Raja', 'contactMobile': '9080706050', 'relationship': 'Wife', 'deliveryStatus': 'SMS_QUEUED_OFFLINE'}
-      ];
+
+      List<dynamic> offlineContacts = [];
+      bool initialized = false;
+      try {
+        final metaBox = await Hive.openBox('contacts_meta_box');
+        initialized = metaBox.get('initialized', defaultValue: false);
+        if (initialized) {
+          final contactsBox = await Hive.openBox('contacts_box');
+          if (contactsBox.isNotEmpty) {
+            offlineContacts = contactsBox.values.map((item) {
+              final map = Map<String, dynamic>.from(item);
+              return {
+                'contactName': map['contactName'],
+                'contactMobile': map['contactMobile'],
+                'relationship': map['relationship'] ?? 'Family',
+                'deliveryStatus': 'SMS_QUEUED_OFFLINE'
+              };
+            }).toList();
+          }
+        }
+      } catch (hiveErr) {
+        debugPrint("Error reading contacts_box from Hive: $hiveErr");
+      }
+
+      if (!initialized && offlineContacts.isEmpty) {
+        offlineContacts = [
+          {'contactName': 'Arul Kumar', 'contactMobile': '9876543210', 'relationship': 'Brother', 'deliveryStatus': 'SMS_QUEUED_OFFLINE'},
+          {'contactName': 'Kavita Raja', 'contactMobile': '9080706050', 'relationship': 'Wife', 'deliveryStatus': 'SMS_QUEUED_OFFLINE'}
+        ];
+      }
+
       state = state.copyWith(notifiedContacts: offlineContacts);
       return offlineContacts;
     } else {

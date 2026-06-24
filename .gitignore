@@ -31,3 +31,6 @@ frontend/.flutter-plugins
 frontend/.flutter-plugins-dependencies
 frontend/.pub/
 frontend/.pub-cache/
+
+# Local database directory
+backend/db/

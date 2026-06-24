@@ -20,6 +20,17 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Response interceptor to cache successfully fetched emergency contacts
+api.interceptors.response.use(
+  (response) => {
+    if (response.config.url === '/api/users/contacts' && response.status === 200) {
+      localStorage.setItem('emergency_contacts', JSON.stringify(response.data));
+    }
+    return response;
+  },
+  (error) => Promise.reject(error)
+);
+
 class SyncManagerService {
   constructor() {
     this.isOffline = !navigator.onLine;
@@ -104,10 +115,28 @@ class SyncManagerService {
       sosBox.push(payload);
       localStorage.setItem('sos_box', JSON.stringify(sosBox));
 
-      const offlineContacts = [
-        { contactName: 'Arul Kumar', contactMobile: '9876543210', relationship: 'Brother', deliveryStatus: 'SMS_QUEUED_OFFLINE' },
-        { contactName: 'Kavita Raja', contactMobile: '9080706050', relationship: 'Wife', deliveryStatus: 'SMS_QUEUED_OFFLINE' }
-      ];
+      let cachedContacts = null;
+      try {
+        const stored = localStorage.getItem('emergency_contacts');
+        if (stored !== null) {
+          cachedContacts = JSON.parse(stored);
+        }
+      } catch (err) {
+        console.error("Error reading cached contacts: ", err);
+      }
+
+      const offlineContacts = cachedContacts !== null
+        ? cachedContacts.map(c => ({
+            contactName: c.contactName,
+            contactMobile: c.contactMobile,
+            relationship: c.relationship,
+            deliveryStatus: 'SMS_QUEUED_OFFLINE'
+          }))
+        : [
+            { contactName: 'Arul Kumar', contactMobile: '9876543210', relationship: 'Brother', deliveryStatus: 'SMS_QUEUED_OFFLINE' },
+            { contactName: 'Kavita Raja', contactMobile: '9080706050', relationship: 'Wife', deliveryStatus: 'SMS_QUEUED_OFFLINE' }
+          ];
+
       this.notifiedContacts = offlineContacts;
       this.notify();
       console.log("Offline: Critical SOS queued locally in sos_box.");

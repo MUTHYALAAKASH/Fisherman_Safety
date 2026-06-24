@@ -46,8 +46,10 @@ public class SosController {
 
         List<Map<String, Object>> notifiedList = contacts.stream().map(c -> {
             Map<String, Object> contactMap = new HashMap<>();
-            contactMap.put("contactName", c.getContactUser().getFullName());
-            contactMap.put("contactMobile", c.getContactUser().getMobileNumber());
+            String name = c.getContactUser() != null ? c.getContactUser().getFullName() : c.getContactName();
+            String mobile = c.getContactUser() != null ? c.getContactUser().getMobileNumber() : c.getContactMobile();
+            contactMap.put("contactName", name);
+            contactMap.put("contactMobile", mobile);
             contactMap.put("relationship", c.getRelationship());
             contactMap.put("deliveryStatus", "SMS_SENT_SIMULATED");
             return contactMap;
